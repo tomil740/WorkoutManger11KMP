@@ -1,0 +1,17 @@
+CREATE TABLE exerciseEntity(
+ id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+ name TEXT
+);
+
+insertExerciseEntity:
+INSERT OR REPLACE
+INTO exerciseEntity(
+id
+,name
+)VALUES (?,?);
+
+
+getExercise:
+SELECT *
+FROM exerciseEntity
+ORDER BY id ASC;
