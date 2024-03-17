@@ -41,10 +41,13 @@ android {
 dependencies {
     implementation(projects.shared)
     implementation(libs.compose.ui)
+    implementation("androidx.compose.foundation:foundation")
+
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)
     implementation(libs.androidx.activity.compose)
     debugImplementation(libs.compose.ui.tooling)
+    implementation(platform("androidx.compose:compose-bom:2024.02.02"))
 
     implementation(project.dependencies.platform(libs.koin.bom))
     implementation(libs.koin.core)
