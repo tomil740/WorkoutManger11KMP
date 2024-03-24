@@ -1,5 +1,13 @@
 package com.example.workoutmanger11.android.workoutTracker.presentation.components
 
+import android.annotation.SuppressLint
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection.Companion.Left
+import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection.Companion.Right
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.EaseIn
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.with
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +29,7 @@ import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -28,8 +37,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
+import com.example.workoutmanger11.android.util.navigation.screens.WorkoutBuilderScreenClass
+import com.example.workoutmanger11.util.ExerciseBuilderObj
 import com.example.workoutmanger11.workoutTracker.domain.models.AbstractExerciseModule
 
+
+
+@OptIn(ExperimentalAnimationApi::class)
+@SuppressLint("UnusedContentLambdaTargetStateParameter")
 @Composable
 fun AbstractExerciseItem(
     abstractExerciseModule : AbstractExerciseModule? =null,
@@ -39,10 +56,17 @@ fun AbstractExerciseItem(
     modifier: Modifier = Modifier
     ) {
 
+    val navigator = LocalNavigator.currentOrThrow
+
+
     val editEnable = remember { mutableStateOf(false) }
     val trackBut = remember { mutableStateOf("enter-Data") }
     var unEmphaseColor = MaterialTheme.colorScheme.onPrimaryContainer
     var unEmphaseBackground = MaterialTheme.colorScheme.primaryContainer
+
+    val setValues = listOf<ExerciseBuilderObj>(ExerciseBuilderObj(),
+        ExerciseBuilderObj(),ExerciseBuilderObj(),ExerciseBuilderObj())
+
 
     if(isEmphase){
          unEmphaseColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -63,27 +87,43 @@ fun AbstractExerciseItem(
             
             Spacer(modifier = Modifier.height(8.dp))
 
-            if(editEnable.value) {
-                trackBut.value = "Track"
-                LazyRow{
-                    items(4){
-                        ExerciseBuilderItem(unEmphaseColor=unEmphaseColor, setIndex = it+1)
-                        Spacer(modifier = Modifier.width(12.dp))
+                AnimatedContent(editEnable.value,
+                    transitionSpec = {slideIntoContainer(
+                        animationSpec = tween(300, easing = EaseIn),
+                        towards = Right
+                    ).with(
+                        slideOutOfContainer(
+                            animationSpec = tween(300, easing = EaseIn),
+                            towards = Left
+                        )
+                    )
+                    }, label = ""
+                ) {
+                    if (it) {
+                        trackBut.value = "Track"
+                        LazyRow {
+                            items(4) {
+                                ExerciseBuilderItem(
+                                    unEmphaseColor = unEmphaseColor,
+                                    setIndex = it + 1,reps = setValues.get(it).reps,weight=setValues.get(it).weight
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                            }
+                        }
+                    } else {
+                        trackBut.value = "enter-Data"
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            //will take the maucelss list from the abstract exercise and implemnt it down here
+                            MuscleItem("Shoulders")
+                            MuscleItem("Back", isMain = true)
+                            MuscleItem("Arms")
+
+                        }
                     }
                 }
-            }else{
-                trackBut.value ="enter-Data"
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    //will take the maucelss list from the abstract exercise and implemnt it down here
-                    MuscleItem("Shoulders")
-                    MuscleItem("Back", isMain = true)
-                    MuscleItem("Arms")
-
-                }
-            }
 
             Row(modifier = Modifier
                 .fillMaxSize()
@@ -100,7 +140,13 @@ fun AbstractExerciseItem(
                 Text(text = "Rp weight : Body Weight + 20KG",
                     style = MaterialTheme.typography.bodySmall, color = unEmphaseColor)
 
-               ElevatedButton(onClick = { editEnable.value = !editEnable.value}) {
+               ElevatedButton(onClick = {
+                   if(editEnable.value)
+                       navigator.push(WorkoutBuilderScreenClass(
+                           setValues
+                       ))
+
+                   editEnable.value = !editEnable.value}) {
 
                        Text(text = trackBut.value)
 
